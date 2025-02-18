@@ -1,65 +1,128 @@
-const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User"); // Assuming you're using Mongoose or any ORM for the User model
 
-require("dotenv").config();
-
+// Register user
 const registerUser = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+  const { username, email, password } = req.body;
 
-    let user = await User.findOne({ email });
-    if (user) {
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    user = new User({ name, email, password: hashedPassword });
-
-    await user.save();
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
     });
 
-    res.status(201).json({ token, userId: user._id, name: user.name });
+    await newUser.save();
+    return res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
+// Login user
 const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
+  try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id }, "your_jwt_secret", {
       expiresIn: "1h",
     });
 
-    res.status(200).json({ token, userId: user._id, name: user.name });
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
+// Get user profile (protected route)
 const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(req.userId).select("-password"); // Exclude password
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    res.status(200).json(user);
+    return res.status(200).json({ user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-module.exports = { registerUser, loginUser, getUser };
+// Forgot password (send reset email)
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate a password reset token (for demo purposes, we'll send it as part of the response)
+    const resetToken = jwt.sign({ userId: user._id }, "your_jwt_secret", {
+      expiresIn: "15m",
+    });
+
+    // In a real scenario, send this token via email
+    return res
+      .status(200)
+      .json({ message: "Password reset token generated", resetToken });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Reset password using token
+const resetPassword = async (req, res) => {
+  const { resetToken, newPassword } = req.body;
+
+  try {
+    const decoded = jwt.verify(resetToken, "your_jwt_secret");
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getUser,
+  forgotPassword,
+  resetPassword,
+};

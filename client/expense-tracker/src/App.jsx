@@ -1,13 +1,17 @@
-import Login from "./pages/Login.jsx"
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import Loginpage from "./pages/Loginpage";
 
-
-function App() {
-  
+const App = () => {
   return (
-    <>
-      <Login />
-    </>
-  )
-}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Loginpage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;
