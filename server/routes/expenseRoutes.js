@@ -1,24 +1,14 @@
 const express = require("express");
 const {
-  addExpense,
   getExpenses,
-  deleteExpense,
-  downloadExpenseReport,
-} = require("../controllers/expenseController.js");
-const authMiddleware = require("../middleware/authMiddleware.js");
-
+  addExpense,
+  generatePDF,
+} = require("../controllers/expenseController");
 const router = express.Router();
+const authMiddleware = require("../middleware/authMiddleware");
 
-// Add a new expense
-router.post("/add", authMiddleware, addExpense);
-
-// Get all user expenses
 router.get("/", authMiddleware, getExpenses);
-
-// Delete an expense
-router.delete("/:id", authMiddleware, deleteExpense);
-
-// Generate & Download PDF report (Fixed Route Path)
-router.get("/report/download", authMiddleware, downloadExpenseReport);
+router.post("/", authMiddleware, addExpense);
+router.get("/download", authMiddleware, generatePDF);
 
 module.exports = router;
