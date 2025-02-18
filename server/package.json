@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Expense Tracker API using Express.js, MongoDB, and JWT authentication",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"

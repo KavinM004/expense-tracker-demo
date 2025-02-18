@@ -1,14 +1,17 @@
-const express = require("express");
-const {
-  getExpenses,
+import express from "express";
+import {
   addExpense,
-  generatePDF,
-} = require("../controllers/expenseController");
+  getAllExpenses,
+  deleteExpense,
+  downloadExpenseReport,
+} from "../controllers/expenseController.js";
+import { authenticate } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
 
-router.get("/", authMiddleware, getExpenses);
-router.post("/", authMiddleware, addExpense);
-router.get("/download", authMiddleware, generatePDF);
+router.post("/add", authenticate, addExpense);
+router.get("/all", authenticate, getAllExpenses);
+router.delete("/:expenseId", authenticate, deleteExpense);
+router.get("/download-pdf", authenticate, downloadExpenseReport);
 
-module.exports = router;
+export default router;

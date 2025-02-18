@@ -1,20 +1,22 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const connectDB = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
-const expenseRoutes = require("./routes/expenseRoutes");
-require("dotenv").config();
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import expenseRoutes from "./routes/expenseRoutes.js";
+
+dotenv.config();
 
 const app = express();
+
+app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json());
 
-connectDB();
-
+// ✅ Correctly use imported routes
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 
-app.listen(process.env.PORT || 4000, () => {
-  console.log(`Server running on port : ${process.env.PORT || 4000}`);
-});
+const PORT = process.env.PORT || 4000;
+connectDB();
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,22 +1,19 @@
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
-const path = require("path");
+import PDFDocument from "pdfkit";
 
-const generatePDF = async (expenses, userName, month, year) => {
+const generatePDF = async (expenses, userNameFromDB, month, year) => {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ margin: 30, size: "A4" });
-      const fileName = `Expense_Report_${month}_${year}.pdf`;
-      const filePath = path.join(__dirname, "../reports", fileName);
 
-      if (!fs.existsSync(path.join(__dirname, "../reports"))) {
-        fs.mkdirSync(path.join(__dirname, "../reports"), { recursive: true });
-      }
+      // Store PDF in memory
+      const buffers = [];
+      doc.on("data", (chunk) => buffers.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(buffers)));
 
-      const stream = fs.createWriteStream(filePath);
-      doc.pipe(stream);
+      // Ensure username is properly set
+      const userName = userNameFromDB || "User";
 
-      doc.font("Helvetica");
+      // Title
       doc
         .font("Times-Bold")
         .fontSize(24)
@@ -25,19 +22,20 @@ const generatePDF = async (expenses, userName, month, year) => {
       doc.font("Helvetica-BoldOblique").fontSize(15).text(`Dear ${userName},`);
       doc.moveDown(1.5);
 
+      // Table Headers with different background colors
       const columnWidth = 120;
+      const rowHeight = 30; // Increase row height for padding effect
       const startX = 50;
       let startY = doc.y;
-
       const headers = ["Date", "Category", "Description", "Amount"];
-      doc.font("Helvetica-Bold").fontSize(13);
+      const headerColors = ["#ffcccc", "#ccffcc", "#ccccff", "#ffffcc"];
 
+      doc.font("Helvetica-Bold").fontSize(13);
       headers.forEach((header, i) => {
-        const columnColor = i % 2 === 0 ? "#e6e6e6" : "#d9d9d9";
         doc
-          .rect(startX + i * columnWidth, startY - 2, columnWidth, 26)
-          .fill(columnColor)
-          .stroke();
+          .rect(startX + i * columnWidth, startY - 2, columnWidth, rowHeight)
+          .fill(headerColors[i])
+          .stroke("#000000");
         doc
           .fillColor("black")
           .text(header, startX + i * columnWidth, startY + 6, {
@@ -47,132 +45,151 @@ const generatePDF = async (expenses, userName, month, year) => {
       });
 
       doc.moveDown(0.5);
-      doc.font("Helvetica").fontSize(12);
+      doc.font("Helvetica-Bold").fontSize(12); // ✅ Semi-bold text for table data
 
+      // Table Rows with column background colors
       let totalIncome = 0,
         totalExpense = 0;
       let yPosition = doc.y + 8;
 
-      expenses.forEach((expense, index) => {
-        const rowColor = index % 2 === 0 ? "#f8f8f8" : "#ffffff";
-        doc
-          .rect(startX, yPosition - 2, columnWidth * 4, 26)
-          .fill(rowColor)
-          .stroke("#000000");
-        doc.fillColor("black");
-
+      expenses.forEach((expense) => {
         const formattedDate = new Date(expense.createdAt).toLocaleDateString(
           "en-GB"
         );
-        doc.text(formattedDate, startX + 5, yPosition, {
-          width: columnWidth - 10,
-          align: "left",
-        });
-        doc.text(expense.category, startX + columnWidth + 5, yPosition, {
-          width: columnWidth - 10,
-          align: "left",
-        });
+        let amount = parseFloat(expense.amount) || 0;
 
+        // Set background color for each column
+        doc
+          .rect(startX, yPosition - 2, columnWidth, rowHeight)
+          .fill("#f8f9fa")
+          .stroke();
+        doc
+          .rect(startX + columnWidth, yPosition - 2, columnWidth, rowHeight)
+          .fill("#e9ecef")
+          .stroke();
+        doc
+          .rect(startX + columnWidth * 2, yPosition - 2, columnWidth, rowHeight)
+          .fill("#dee2e6")
+          .stroke();
+        doc
+          .rect(startX + columnWidth * 3, yPosition - 2, columnWidth, rowHeight)
+          .fill("#ced4da")
+          .stroke();
+
+        // ✅ Apply top padding (Move text slightly downward)
+        doc.fillColor("black").font("Helvetica-Bold");
+        doc.text(formattedDate, startX + 5, yPosition + 6, {
+          width: columnWidth - 10,
+          align: "center",
+        });
+        doc.text(expense.category, startX + columnWidth + 5, yPosition + 6, {
+          width: columnWidth - 10,
+          align: "center",
+        });
         doc.text(
           expense.description || "N/A",
           startX + columnWidth * 2 + 5,
-          yPosition,
+          yPosition + 6,
           {
             width: columnWidth - 10,
-            align: "left",
+            align: "center",
           }
         );
 
-        let amount = parseFloat(expense.amount);
-        if (isNaN(amount)) {
-          console.error(`Invalid amount detected: ${expense.amount}`);
-          amount = 0;
-        }
-
         if (expense.category.toLowerCase() === "income") {
-          doc.fillColor("#008000");
           totalIncome += amount;
+          doc.fillColor("#008000");
         } else {
-          doc.fillColor("#FF0000");
           totalExpense += amount;
+          doc.fillColor("#FF0000");
         }
 
         doc.text(
-          `${amount.toFixed(2)}`.replace(/^1(?=\d)/, ""),
+          amount.toFixed(2),
           startX + columnWidth * 3 + 5,
-          yPosition,
-          { width: columnWidth - 10, align: "right" }
+          yPosition + 6,
+          {
+            width: columnWidth - 10,
+            align: "center",
+          }
         );
-        doc.fillColor("black");
 
-        yPosition += 30;
+        doc.fillColor("black");
+        yPosition += rowHeight;
       });
 
+      // Totals Row
       doc.moveDown(1.5);
       doc.font("Helvetica-Bold").fontSize(14);
       doc
-        .rect(startX, yPosition - 2, columnWidth * 4, 26)
-        .fill("#dddddd")
-        .stroke("#000000");
+        .rect(startX, yPosition - 2, columnWidth * 4, rowHeight)
+        .fill("#d6d8db")
+        .stroke();
       doc.fillColor("black");
 
-      doc.text("Total Income:", startX + 5, yPosition + 5, {
+      doc.text("Total Income:", startX + 5, yPosition + 6, {
         width: columnWidth - 10,
-        align: "left",
+        align: "center",
       });
-      doc.text("Total Expenses:", startX + columnWidth * 2 + 5, yPosition + 5, {
+      doc.text("Total Expenses:", startX + columnWidth * 2 + 5, yPosition + 6, {
         width: columnWidth - 10,
-        align: "left",
+        align: "center",
       });
 
       doc
         .fillColor("#008000")
-        .text(
-          `${totalIncome.toFixed(2)}`,
-          startX + columnWidth + 5,
-          yPosition + 5,
-          { width: columnWidth - 10, align: "left" }
-        );
+        .text(totalIncome.toFixed(2), startX + columnWidth + 5, yPosition + 6, {
+          width: columnWidth - 10,
+          align: "center",
+        });
       doc
         .fillColor("#FF0000")
         .text(
-          `${totalExpense.toFixed(2)}`,
+          totalExpense.toFixed(2),
           startX + columnWidth * 3 + 5,
-          yPosition + 5,
-          { width: columnWidth - 10, align: "right" }
+          yPosition + 6,
+          {
+            width: columnWidth - 10,
+            align: "center",
+          }
         );
 
-      doc.fillColor("black");
-      yPosition += 32;
-
+      // ✅ Fix Net Balance Row Position
+      yPosition += rowHeight;
       doc
-        .rect(startX, yPosition - 2, columnWidth * 4, 26)
+        .fillColor("black")
+        .rect(startX, yPosition - 2, columnWidth * 4, rowHeight)
         .fill("#d1ecf1")
-        .stroke("#000000");
-      doc.fillColor("black");
-      doc.text("Net Balance:", startX + 5, yPosition + 5, {
-        width: columnWidth - 10,
-        align: "left",
-      });
+        .stroke();
 
+      // **Make sure "Net Balance" is properly positioned inside the row**
+      doc
+        .fillColor("black")
+        .font("Helvetica-Bold")
+        .text("Net Balance:", startX + 5, yPosition + 6, {
+          width: columnWidth - 10,
+          align: "center",
+        });
+
+      // **Ensure Net Balance amount aligns correctly**
       doc
         .fillColor("#0000FF")
         .text(
-          `${(totalIncome - totalExpense).toFixed(2)}`,
+          (totalIncome - totalExpense).toFixed(2),
           startX + columnWidth + 5,
-          yPosition + 5,
-          { width: columnWidth - 10, align: "left" }
+          yPosition + 6,
+          {
+            width: columnWidth - 10,
+            align: "center",
+          }
         );
 
       doc.fillColor("black");
       doc.end();
-
-      stream.on("finish", () => resolve(filePath));
-      stream.on("error", reject);
     } catch (error) {
       reject(error);
     }
   });
 };
 
-module.exports = generatePDF;
+export default generatePDF;
