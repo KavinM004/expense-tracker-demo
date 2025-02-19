@@ -24,7 +24,6 @@ import {
   ReceiptLong,
   GetApp,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
 
 const DashboardNavbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -44,46 +43,38 @@ const DashboardNavbar = () => {
 
   return (
     <AppBar
-      position="static"
+      position="fixed"
       sx={{
         background: "linear-gradient(90deg, #4B0082, #8A2BE2)",
         width: "100%",
-        margin: 0,
-        padding: 0,
         top: 0,
         left: 0,
+        right: 0,
+        height: "64px",
       }}
     >
-      <Toolbar
-        sx={{
-          width: "100%",
-          padding: "0 !important",
-          minHeight: "56px",
-          margin: 0,
-        }}
-      >
-        <motion.div
-          animate={{ x: menuOpen ? 250 : 0 }}
-          transition={{ type: "spring", stiffness: 100 }}
-        >
-          <IconButton
-            onClick={toggleDrawer}
-            sx={{ color: "white", mr: 2, position: "relative", zIndex: 1301 }}
-          >
-            <MenuOpen fontSize="large" />
-          </IconButton>
-        </motion.div>
+      <Toolbar sx={{ width: "100%", minHeight: "64px", paddingX: 2 }}>
+        <IconButton onClick={toggleDrawer} sx={{ color: "white", mr: 2 }}>
+          <MenuOpen fontSize="large" />
+        </IconButton>
 
         <Typography variant="h6" sx={{ flexGrow: 1, color: "white" }}>
           Expense Tracker
         </Typography>
 
-        <Box>
-          <motion.div whileHover={{ scale: 1.1 }}>
-            <IconButton onClick={handleMenuOpen} sx={{ color: "white" }}>
-              <AccountCircle fontSize="large" />
-            </IconButton>
-          </motion.div>
+        <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
+          <IconButton
+            onClick={handleMenuOpen}
+            sx={{
+              color: "white",
+              p: 0,
+              mr: { xs: 2, sm: 3, md: 4 }, // Adjust spacing based on screen size
+              ml: { xs: -1, sm: -1.5, md: -2 }, // Less negative margin on larger screens
+            }}
+          >
+            <AccountCircle fontSize="large" />
+          </IconButton>
+
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
@@ -105,75 +96,41 @@ const DashboardNavbar = () => {
       </Toolbar>
 
       <Drawer anchor="left" open={menuOpen} onClose={toggleDrawer}>
-        <motion.div
-          initial={{ x: -300 }}
-          animate={{ x: 0 }}
-          transition={{ type: "spring", stiffness: 120, damping: 15 }}
-          style={{
-            position: "relative",
+        <Box
+          sx={{
+            width: 250,
             background: "linear-gradient(90deg, #4B0082, #8A2BE2)",
             height: "100vh",
           }}
         >
-          <Box sx={{ width: 250, position: "relative" }}>
-            <List>
-              <ListItem
-                button
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.2)",
-                    borderRadius: "8px",
-                    margin: "8px 0",
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <Dashboard sx={{ color: "white" }} />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard" sx={{ color: "white" }} />
-              </ListItem>
-              <Divider sx={{ backgroundColor: "white", margin: "5px 0" }} />
-              <ListItem
-                button
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.2)",
-                    borderRadius: "8px",
-                    margin: "8px 0",
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <ReceiptLong sx={{ color: "white" }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Expense Manager"
-                  sx={{ color: "white" }}
-                />
-              </ListItem>
-              <Divider sx={{ backgroundColor: "white", margin: "5px 0" }} />
-              <ListItem
-                button
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.2)",
-                    borderRadius: "8px",
-                    margin: "8px 0",
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <GetApp sx={{ color: "white" }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Download Report"
-                  sx={{ color: "white" }}
-                />
-              </ListItem>
-              <Divider sx={{ backgroundColor: "white", margin: "5px 0" }} />
-            </List>
-          </Box>
-        </motion.div>
+          <List>
+            {[
+              { text: "Dashboard", icon: <Dashboard /> },
+              { text: "Expense Manager", icon: <ReceiptLong /> },
+              { text: "Download Report", icon: <GetApp /> },
+            ].map((item, index) => (
+              <React.Fragment key={index}>
+                <ListItem
+                  component="div"
+                  sx={{
+                    cursor: "pointer",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                      borderRadius: "8px",
+                      marginY: 1,
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "white" }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} sx={{ color: "white" }} />
+                </ListItem>
+                <Divider sx={{ backgroundColor: "white", marginY: "5px" }} />
+              </React.Fragment>
+            ))}
+          </List>
+        </Box>
       </Drawer>
     </AppBar>
   );

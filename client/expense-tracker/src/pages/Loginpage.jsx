@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from "react";
+import { login, register } from "../api/api.jsx";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
   TextField,
   Button,
-  Link,
   Box,
   FormControlLabel,
   Switch,
@@ -14,38 +15,65 @@ import {
 } from "@mui/material";
 import { Email, Lock, Person } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     name: "",
   });
   const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleSubmit = useCallback(
-    (e) => {
-      e.preventDefault();
-      isSignUp ? handleSignUp() : handleLogin();
-    },
-    [isSignUp]
-  );
-
-  const handleLogin = () => {
-    // Add login logic here
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        await handleSignUp();
+      } else {
+        await handleLogin();
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = () => {
-    // Add sign-up logic here
+  const handleLogin = async () => {
+    try {
+      const response = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+      localStorage.setItem("token", response.data.token);
+      toast.success("Login Successful! Redirecting...", { autoClose: 2000 });
+      setTimeout(() => navigate("/dashboard"), 2000);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed.");
+    }
   };
 
-  const handleForgetPassword = () => {
-    // Add forget password logic here
+  const handleSignUp = async () => {
+    try {
+      const response = await register({
+        username: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+      toast.success(response.data.message || "Sign up successful!");
+      setIsSignUp(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Registration failed.");
+    }
   };
 
   return (
@@ -62,6 +90,8 @@ const LoginPage = () => {
       }}
     >
       <Container maxWidth="xs">
+        <ToastContainer position="top-right" autoClose={3000} />{" "}
+        {/* Toaster added */}
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
@@ -85,6 +115,7 @@ const LoginPage = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
+                      required
                       fullWidth
                       InputProps={{
                         startAdornment: (
@@ -101,6 +132,7 @@ const LoginPage = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    required
                     fullWidth
                     InputProps={{
                       startAdornment: (
@@ -116,6 +148,7 @@ const LoginPage = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    required
                     fullWidth
                     InputProps={{
                       startAdornment: (
@@ -131,17 +164,24 @@ const LoginPage = () => {
                       variant="contained"
                       fullWidth
                       sx={{ bgcolor: "#4B0082", color: "#fff", py: 1.5 }}
+                      disabled={loading}
                     >
-                      {isSignUp ? "Sign Up" : "Login"}
+                      {loading
+                        ? "Processing..."
+                        : isSignUp
+                        ? "Sign Up"
+                        : "Login"}
                     </Button>
                   </motion.div>
-                  <Link
-                    href="#"
-                    onClick={handleForgetPassword}
-                    sx={{ display: "block", textAlign: "center" }}
-                  >
-                    Forget Password?
-                  </Link>
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ cursor: "pointer", color: "blue" }}
+                      onClick={() => navigate("/forgot-password")}
+                    >
+                      Forgot Password?
+                    </Typography>
+                  </Box>
                   <Box
                     sx={{
                       display: "flex",

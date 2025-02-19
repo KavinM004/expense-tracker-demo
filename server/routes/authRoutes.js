@@ -16,6 +16,6 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/profile", authenticate, getUserProfile);
 router.post("/forgot-password", requestPasswordReset); // Send reset link
-router.post("/reset-password/:token", resetPassword); // Reset password
+router.put("/reset-password/:token", resetPassword); // Reset password
 
 export default router; // ✅ Ensure this is a default export

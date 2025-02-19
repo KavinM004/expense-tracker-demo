@@ -124,27 +124,41 @@ export const requestPasswordReset = async (req, res) => {
 // ✅ Reset Password (When User Clicks Link)
 export const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { token } = req.params; // ✅ Get token from URL
     const { newPassword } = req.body;
 
+    if (!newPassword || newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long." });
+    }
+
+    // ✅ Find user by reset token and check expiration
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // Ensure token is still valid
+      resetPasswordExpires: { $gt: Date.now() }, // Token must be valid
     });
 
-    if (!user) return res.status(400).json({ message: "Invalid or expired token." });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token." });
+    }
 
-    // Hash the new password and update
+    // ✅ Hash new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // Clear reset token
+    // ✅ Clear reset token fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password reset successful." });
+    res.json({ message: "Password reset successful. You can now log in." });
   } catch (error) {
-    res.status(500).json({ message: "Error resetting password", error: error.message });
+    console.error("Error in resetPassword:", error);
+    res
+      .status(500)
+      .json({ message: "Error resetting password", error: error.message });
   }
 };
