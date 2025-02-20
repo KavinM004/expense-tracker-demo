@@ -30,9 +30,7 @@ Frontend Setup
 1. Clone the repository: git clone https://github.com/your-username/expense-tracker.git
 2. Navigate to the frontend directory: cd expense-tracker/client
 3. Install dependencies: npm install
-4. Create a new file called .env in the root of the frontend directory and add the following variables:
-	* REACT_APP_API_URL=http://localhost:4000/api
-5. Start the frontend development server: npm start
+4. Start the frontend development server: npm start
 
 Backend Setup
 
