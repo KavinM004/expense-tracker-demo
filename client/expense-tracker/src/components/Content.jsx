@@ -15,9 +15,12 @@ const Content = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:4000/api/finance", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          "https://expense-tracker-demo-sanu.onrender.com/api/finance",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setFinancialData(response.data);
       } catch (error) {
         console.error("Error fetching financial data", error);
