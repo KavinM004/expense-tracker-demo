@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { resetPassword } from "../api/api";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   Container,
   Typography,
@@ -9,19 +9,22 @@ import {
   Paper,
   Stack,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import { Lock, CheckCircle } from "@mui/icons-material";
 import { motion } from "framer-motion";
 
-const ResetPasswordPage = () => {
-  const { token } = useParams(); // ✅ Get token from URL
+const ResetPassword = () => {
+  const { token } = useParams(); // Get token from URL
   const navigate = useNavigate();
+
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleResetPassword = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
@@ -32,17 +35,27 @@ const ResetPasswordPage = () => {
       setLoading(false);
       return;
     }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await resetPassword(token, { newPassword });
+      const response = await axios.post(
+        `https://expense-tracker-demo-sanu.onrender.com/api/auth/reset-password/${token}`,
+        { newPassword } // Only send newPassword, backend should not expect confirmPassword
+      );
+
       setMessage(response.data.message || "Password reset successful!");
-      setTimeout(() => navigate("/"), 4000);
-    } catch (error) {
-      setError(error.response?.data?.message || "Error resetting password.");
+      setTimeout(() => navigate("/login"), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Error resetting password.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <motion.div
@@ -62,7 +75,6 @@ const ResetPasswordPage = () => {
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.5 }}
-          whileHover={{ scale: 1.05 }}
         >
           <Paper elevation={6} sx={{ p: 4, borderRadius: 3, bgcolor: "#fff" }}>
             <Stack spacing={2} alignItems="center">
@@ -72,7 +84,7 @@ const ResetPasswordPage = () => {
               >
                 Reset Password
               </Typography>
-              <form onSubmit={handleResetPassword} style={{ width: "100%" }}>
+              <form onSubmit={handleSubmit} style={{ width: "100%" }}>
                 <Stack spacing={2}>
                   <TextField
                     label="New Password"
@@ -89,14 +101,35 @@ const ResetPasswordPage = () => {
                       ),
                     }}
                   />
+                  <TextField
+                    label="Confirm Password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Lock sx={{ color: "#4B0082" }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
                   <motion.div whileHover={{ scale: 1.05 }}>
                     <Button
                       type="submit"
                       variant="contained"
                       fullWidth
                       sx={{ bgcolor: "#4B0082", color: "#fff", py: 1.5 }}
-                      disabled={loading || !newPassword}
-                      startIcon={<CheckCircle />}
+                      disabled={loading}
+                      startIcon={
+                        loading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : (
+                          <CheckCircle />
+                        )
+                      }
                     >
                       {loading ? "Resetting..." : "Reset Password"}
                     </Button>
@@ -127,4 +160,4 @@ const ResetPasswordPage = () => {
   );
 };
 
-export default ResetPasswordPage;
+export default ResetPassword;
