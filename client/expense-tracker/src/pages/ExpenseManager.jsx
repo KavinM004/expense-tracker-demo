@@ -43,17 +43,31 @@ const ExpenseManager = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("You are not logged in. Please log in first.");
+        return;
+      }
+
       const response = await axios.get(
-        "https://expense-tracker-demo-sanu.onrender.com/api/expenses/all",
+        "http://localhost:4000/api/expenses/all",
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setTransactions(response.data);
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      if (error.response && error.response.status === 401) {
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem("token");
+        window.location.href = "/login"; // Redirect to login page
+      } else {
+        console.error("Error fetching transactions:", error);
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleAddTransaction = async () => {
     if (!category || !amount || !description) {
@@ -70,7 +84,7 @@ const ExpenseManager = () => {
         description,
       };
       await axios.post(
-        "https://expense-tracker-demo-sanu.onrender.com/api/expenses/add",
+        "http://localhost:4000/api/expenses/add",
         newTransaction,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -84,6 +98,32 @@ const ExpenseManager = () => {
       setLoading(false);
     }
   };
+
+  const handleDeleteTransaction = async (id) => {
+    console.log("Attempting to delete transaction with ID:", id);
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(
+        `http://localhost:4000/api/expenses/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Delete Response:", response.data);
+      fetchTransactions();
+    } catch (error) {
+      console.error(
+        "Error deleting transaction:",
+        error.response?.data || error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   return (
     <Box
