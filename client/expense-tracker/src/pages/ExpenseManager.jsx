@@ -50,7 +50,7 @@ const ExpenseManager = () => {
       }
 
       const response = await axios.get(
-        "https://expense-tracker-demo-sanu.onrender.com/api/expenses/all",
+        "http://localhost:4000/api/expenses/all",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -84,7 +84,7 @@ const ExpenseManager = () => {
         description,
       };
       await axios.post(
-        "https://expense-tracker-demo-sanu.onrender.com/api/expenses/add",
+        "http://localhost:4000/api/expenses/add",
         newTransaction,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -106,7 +106,7 @@ const ExpenseManager = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.delete(
-        `https://expense-tracker-demo-sanu.onrender.com/api/expenses/${id}`,
+        `http://localhost:4000/api/expenses/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
