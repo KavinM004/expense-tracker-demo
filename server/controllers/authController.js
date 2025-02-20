@@ -102,8 +102,8 @@ export const requestPasswordReset = async (req, res) => {
       .update(resetToken)
       .digest("hex");
 
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    user.resetToken = hashedToken;
+    user.resetTokenExpires = Date.now() + 3600000; // Token expires in 1 hour
     await user.save();
 
     const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
@@ -128,20 +128,15 @@ export const requestPasswordReset = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
-    const { newPassword, confirmPassword } = req.body;
+    const { newPassword } = req.body;
 
-    // Check if both passwords match
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match." });
-    }
-
-    // Hash the provided reset token for security
+    // Hash the provided reset token to compare with the stored hash
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Find user by reset token and ensure it's still valid
+    // Find user by reset token and check if it's still valid
     const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }, // Token must not be expired
+      resetToken: hashedToken,
+      resetTokenExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
 
     if (!user) {
@@ -155,8 +150,8 @@ export const resetPassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, salt);
 
     // Clear reset token fields
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    user.resetToken = undefined;
+    user.resetTokenExpires = undefined;
 
     await user.save();
 
@@ -169,4 +164,3 @@ export const resetPassword = async (req, res) => {
       .json({ message: "Error resetting password", error: error.message });
   }
 };
-

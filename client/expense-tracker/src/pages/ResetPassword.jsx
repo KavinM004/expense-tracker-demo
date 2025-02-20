@@ -42,7 +42,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await axios.post(
+      const response = await axios.put(
         `https://expense-tracker-demo-sanu.onrender.com/api/auth/reset-password/${token}`,
         { newPassword } // Only send newPassword, backend should not expect confirmPassword
       );
