@@ -44,7 +44,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:4000/api/auth/reset-password/${token}`,
+        `https://expense-tracker-demo-sanu.onrender.com/api/auth/reset-password/${token}`,
         { newPassword, confirmPassword }, // Sending both fields for validation
         { headers: { "Content-Type": "application/json" } }
       );

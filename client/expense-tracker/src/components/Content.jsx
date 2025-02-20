@@ -16,7 +16,7 @@ const Content = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          "http://localhost:4000/api/finance",
+          "https://expense-tracker-demo-sanu.onrender.com/api/finance",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
