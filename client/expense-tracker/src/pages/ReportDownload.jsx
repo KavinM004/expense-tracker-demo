@@ -14,6 +14,8 @@ const ReportDownload = () => {
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
 
+  const API_URL = "http://localhost:4000"; // 🔹 Replace with actual backend URL
+
   const months = [
     "01",
     "02",
@@ -40,8 +42,9 @@ const ReportDownload = () => {
 
     try {
       const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/expenses/download-pdf?month=${month}&year=${year}`,
+        `${API_URL}/api/expenses/download-pdf?month=${month}&year=${year}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
@@ -62,14 +65,10 @@ const ReportDownload = () => {
   };
 
   return (
-    <Container maxWidth="sm" style={{ marginTop: "1px", paddingTop: "55px" }}>
+    <Container maxWidth="sm" style={{ marginTop: "1px", paddingTop: "100px" }}>
       <Typography variant="h5" align="center" gutterBottom>
         Download Expense Report
       </Typography>
-
-      {/* <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        Report Download Content
-      </div> */}
 
       <Grid container spacing={2} justifyContent="center">
         <Grid item xs={12} sm={6}>
@@ -81,7 +80,7 @@ const ReportDownload = () => {
             onChange={(e) => setMonth(e.target.value)}
             InputProps={{
               startAdornment: (
-                <CalendarToday color="action" style={{ marginRight: 8 }} />
+                <CalendarToday style={{ color: "#4A148C", marginRight: 8 }} />
               ),
             }}
           >
@@ -102,7 +101,7 @@ const ReportDownload = () => {
             onChange={(e) => setYear(e.target.value)}
             InputProps={{
               startAdornment: (
-                <DateRange color="action" style={{ marginRight: 8 }} />
+                <DateRange style={{ color: "#4A148C", marginRight: 8 }} />
               ),
             }}
           >
@@ -117,10 +116,14 @@ const ReportDownload = () => {
         <Grid item xs={12}>
           <Button
             variant="contained"
-            color="primary"
             fullWidth
-            startIcon={<Download />}
+            startIcon={<Download style={{ color: "white" }} />}
             onClick={handleDownload}
+            sx={{
+              backgroundColor: "#4A148C", // Dark Purple
+              color: "white",
+              "&:hover": { backgroundColor: "#6A1B9A" }, // Lighter Purple on Hover
+            }}
           >
             Download Report
           </Button>

@@ -56,7 +56,7 @@ const LoginPage = () => {
       });
       localStorage.setItem("token", response.data.token);
       toast.success("Login Successful! Redirecting...", { autoClose: 2000 });
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setTimeout(() => navigate("/expenses"), 2000);
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed.");
     }

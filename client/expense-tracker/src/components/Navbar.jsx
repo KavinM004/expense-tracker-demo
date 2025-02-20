@@ -20,7 +20,6 @@ import {
   ExitToApp,
   Person,
   MenuOpen,
-  Dashboard,
   ReceiptLong,
   GetApp,
 } from "@mui/icons-material";
@@ -48,6 +47,12 @@ const DashboardNavbar = () => {
     navigate(path);
     setMenuOpen(false);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // 🔹 Clear authentication token
+    navigate("/login"); // 🔹 Redirect to login page
+  };
+
 
   return (
     <AppBar
@@ -96,7 +101,7 @@ const DashboardNavbar = () => {
             <MenuItem onClick={handleMenuClose}>
               <Settings sx={{ mr: 1 }} /> Settings
             </MenuItem>
-            <MenuItem onClick={handleMenuClose}>
+            <MenuItem onClick={handleLogout}>
               <ExitToApp sx={{ mr: 1 }} /> Logout
             </MenuItem>
           </Menu>
@@ -113,7 +118,6 @@ const DashboardNavbar = () => {
         >
           <List>
             {[
-              { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
               {
                 text: "Expense Manager",
                 icon: <ReceiptLong />,
