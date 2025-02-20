@@ -96,16 +96,19 @@ export const requestPasswordReset = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found." });
 
+    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    user.resetToken = hashedToken;
-    user.resetTokenExpires = Date.now() + 3600000; // Token expires in 1 hour
+    // Store hashed token and expiration in DB
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // Token valid for 1 hour
     await user.save();
 
+    // Send reset link via email
     const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
 
     await transporter.sendMail({
@@ -128,7 +131,7 @@ export const requestPasswordReset = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
-    const { newPassword } = req.body;
+    const { newPassword, confirmPassword } = req.body;
 
     if (!newPassword || newPassword.length < 6) {
       return res
@@ -136,13 +139,17 @@ export const resetPassword = async (req, res) => {
         .json({ message: "Password must be at least 6 characters long." });
     }
 
-    // Hash the provided token (since it was stored as a hash in the DB)
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match." });
+    }
+
+    // Hash token before searching in DB (since stored token is hashed)
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Find user with matching reset token and check if it's not expired
+    // Find user with valid token and not expired
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }, // Token should be valid (not expired)
+      resetPasswordExpires: { $gt: Date.now() }, // Ensure token is still valid
     });
 
     if (!user) {
@@ -151,7 +158,7 @@ export const resetPassword = async (req, res) => {
         .json({ message: "Invalid or expired reset token." });
     }
 
-    // Hash new password before saving
+    // Hash new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
@@ -173,3 +180,4 @@ export const resetPassword = async (req, res) => {
       });
   }
 };
+

@@ -19,28 +19,28 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-    setError("");
+ const handleForgotPassword = async (e) => {
+   e.preventDefault();
+   setLoading(true);
+   setMessage("");
+   setError("");
 
-    try {
-      const response = await axios.post(
-        "https://expense-tracker-demo-sanu.onrender.com/api/auth/forgot-password",
-        { email }
-      );
+   try {
+     const response = await axios.post(
+       "https://expense-tracker-demo-sanu.onrender.com/api/auth/forgot-password",
+       { email }
+     );
 
-      setMessage(response.data.message); // Success message from backend
-      setTimeout(() => navigate("/"), 4000); // Redirect after 5 sec
-    } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to send email. Try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+     setMessage(response.data.message); // Success message from backend
+     setTimeout(() => navigate("/"), 4000); // Redirect after 4 sec
+   } catch (err) {
+     setError(
+       err.response?.data?.message || "Failed to send email. Try again."
+     );
+   } finally {
+     setLoading(false);
+   }
+ };
 
   return (
     <Container maxWidth="xs">

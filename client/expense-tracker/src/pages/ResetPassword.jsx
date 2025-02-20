@@ -35,6 +35,7 @@ const ResetPassword = () => {
       setLoading(false);
       return;
     }
+
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match.");
       setLoading(false);
@@ -44,7 +45,7 @@ const ResetPassword = () => {
     try {
       const response = await axios.put(
         `https://expense-tracker-demo-sanu.onrender.com/api/auth/reset-password/${token}`,
-        { newPassword }, // Only send newPassword, backend should not expect confirmPassword
+        { newPassword, confirmPassword }, // Sending both fields for validation
         { headers: { "Content-Type": "application/json" } }
       );
 
@@ -56,6 +57,7 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <motion.div
