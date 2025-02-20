@@ -130,13 +130,19 @@ export const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { newPassword } = req.body;
 
-    // Hash the provided reset token to compare with the stored hash
+    if (!newPassword || newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long." });
+    }
+
+    // Hash the provided token (since it was stored as a hash in the DB)
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Find user by reset token and check if it's still valid
+    // Find user with matching reset token and check if it's not expired
     const user = await User.findOne({
-      resetToken: hashedToken,
-      resetTokenExpires: { $gt: Date.now() }, // Ensure token is not expired
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }, // Token should be valid (not expired)
     });
 
     if (!user) {
@@ -149,9 +155,9 @@ export const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // Clear reset token fields
-    user.resetToken = undefined;
-    user.resetTokenExpires = undefined;
+    // Clear reset token fields after successful reset
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
 
     await user.save();
 
@@ -161,6 +167,9 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error resetting password", error: error.message });
+      .json({
+        message: "Server error, try again later.",
+        error: error.message,
+      });
   }
 };

@@ -44,7 +44,8 @@ const ResetPassword = () => {
     try {
       const response = await axios.put(
         `https://expense-tracker-demo-sanu.onrender.com/api/auth/reset-password/${token}`,
-        { newPassword } // Only send newPassword, backend should not expect confirmPassword
+        { newPassword }, // Only send newPassword, backend should not expect confirmPassword
+        { headers: { "Content-Type": "application/json" } }
       );
 
       setMessage(response.data.message || "Password reset successful!");
@@ -55,7 +56,6 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
-
 
   return (
     <motion.div
