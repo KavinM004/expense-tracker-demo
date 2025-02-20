@@ -4,6 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import financeRoutes from "./routes/financeRoutes.js"
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(cors());
 // ✅ Correctly use imported routes
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api", financeRoutes);
 
 const PORT = process.env.PORT || 4000;
 connectDB();

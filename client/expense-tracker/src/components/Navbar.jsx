@@ -24,10 +24,13 @@ import {
   ReceiptLong,
   GetApp,
 } from "@mui/icons-material";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const DashboardNavbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -39,6 +42,11 @@ const DashboardNavbar = () => {
 
   const toggleDrawer = () => {
     setMenuOpen(!menuOpen);
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setMenuOpen(false);
   };
 
   return (
@@ -68,8 +76,8 @@ const DashboardNavbar = () => {
             sx={{
               color: "white",
               p: 0,
-              mr: { xs: 2, sm: 3, md: 4 }, // Adjust spacing based on screen size
-              ml: { xs: -1, sm: -1.5, md: -2 }, // Less negative margin on larger screens
+              mr: { xs: 2, sm: 3, md: 4 },
+              ml: { xs: -1, sm: -1.5, md: -2 },
             }}
           >
             <AccountCircle fontSize="large" />
@@ -105,15 +113,24 @@ const DashboardNavbar = () => {
         >
           <List>
             {[
-              { text: "Dashboard", icon: <Dashboard /> },
-              { text: "Expense Manager", icon: <ReceiptLong /> },
-              { text: "Download Report", icon: <GetApp /> },
+              { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
+              {
+                text: "Expense Manager",
+                icon: <ReceiptLong />,
+                path: "/expenses",
+              },
+              { text: "Download Report", icon: <GetApp />, path: "/report" },
             ].map((item, index) => (
               <React.Fragment key={index}>
                 <ListItem
+                  onClick={() => handleNavigation(item.path)}
                   component="div"
                   sx={{
                     cursor: "pointer",
+                    backgroundColor:
+                      location.pathname === item.path
+                        ? "rgba(255, 255, 255, 0.3)"
+                        : "transparent",
                     "&:hover": {
                       backgroundColor: "rgba(255, 255, 255, 0.2)",
                       borderRadius: "8px",
