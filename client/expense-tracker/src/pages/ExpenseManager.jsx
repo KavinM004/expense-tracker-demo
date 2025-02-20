@@ -11,6 +11,7 @@ import {
   IconButton,
   InputAdornment,
   useMediaQuery,
+  CircularProgress,
 } from "@mui/material";
 import {
   AttachMoney,
@@ -29,6 +30,7 @@ const ExpenseManager = () => {
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
@@ -39,16 +41,17 @@ const ExpenseManager = () => {
 
   const fetchTransactions = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.get(
         "https://expense-tracker-demo-sanu.onrender.com/api/expenses/all",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setTransactions(response.data);
     } catch (error) {
       console.error("Error fetching transactions:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,43 +62,26 @@ const ExpenseManager = () => {
     }
 
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const newTransaction = {
         category,
         amount: parseFloat(amount),
         description,
       };
-
       await axios.post(
         "https://expense-tracker-demo-sanu.onrender.com/api/expenses/add",
         newTransaction,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       fetchTransactions();
       setCategory("");
       setAmount("");
       setDescription("");
     } catch (error) {
       console.error("Error adding transaction:", error);
-    }
-  };
-
-  const handleDeleteTransaction = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `https://expense-tracker-demo-sanu.onrender.com/api/expenses/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      fetchTransactions();
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,7 +101,7 @@ const ExpenseManager = () => {
         Expense Manager
       </Typography>
 
-      {/* Input Fields - Responsive */}
+      {/* Input Fields */}
       <Box
         sx={{
           display: "flex",
@@ -133,7 +119,6 @@ const ExpenseManager = () => {
           onChange={(e) => setCategory(e.target.value)}
           variant="outlined"
           fullWidth={isSmallScreen}
-          sx={{ minWidth: isSmallScreen ? "100%" : 150 }}
           required
           InputProps={{
             startAdornment: (
@@ -146,7 +131,6 @@ const ExpenseManager = () => {
           <MenuItem value="Income">Income</MenuItem>
           <MenuItem value="Expense">Expense</MenuItem>
         </TextField>
-
         <TextField
           type="number"
           label="Amount"
@@ -163,7 +147,6 @@ const ExpenseManager = () => {
             ),
           }}
         />
-
         <TextField
           label="Description"
           value={description}
@@ -179,7 +162,6 @@ const ExpenseManager = () => {
             ),
           }}
         />
-
         <Button
           variant="contained"
           sx={{
@@ -194,96 +176,104 @@ const ExpenseManager = () => {
             fontFamily: "Poppins, sans-serif",
           }}
           onClick={handleAddTransaction}
+          disabled={loading}
         >
-          <AddCircle sx={{ fontSize: 20 }} /> Add
+          {loading ? (
+            <CircularProgress size={24} sx={{ color: "#5A189A" }} />
+          ) : (
+            <>
+              <AddCircle sx={{ fontSize: 20 }} /> Add
+            </>
+          )}
         </Button>
       </Box>
 
-      {/* Transactions Display Cards */}
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 3,
-          justifyContent: "center",
-        }}
-      >
-        {transactions.map((transaction) => (
-          <motion.div
-            key={transaction._id}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0px 10px 20px rgba(0,0,0,0.2)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Card
-              sx={{
-                width: 250,
-                padding: 2,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                borderRadius: 3,
-                background:
-                  transaction.category === "Income"
-                    ? "#C8E6C9" // Light Green for Income
-                    : "#FFCDD2", // Light Red for Expense
-                transition: "all 0.3s ease-in-out",
+      {/* Transactions Display */}
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <CircularProgress size={40} sx={{ color: "#5A189A" }} />
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 3,
+            justifyContent: "center",
+          }}
+        >
+          {transactions.map((transaction) => (
+            <motion.div
+              key={transaction._id}
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0px 10px 20px rgba(0,0,0,0.2)",
               }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300 }}
             >
-              <CardContent sx={{ textAlign: "center" }}>
-                {transaction.category === "Income" ? (
-                  <AttachMoney sx={{ fontSize: 40, color: "#8A2BE2" }} />
-                ) : (
-                  <MoneyOff sx={{ fontSize: 40, color: "#8A2BE2" }} />
-                )}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 600, // Semi-bold
-                    mt: 1,
-                    fontFamily: "Playfair Display, serif",
-                    color: "black",
-                  }}
-                >
-                  {transaction.category}
-                </Typography>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 600, // Semi-bold
-                    fontFamily: "Playfair Display, serif",
-                    color: "black",
-                  }}
-                >
-                  ₹{transaction.amount}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600, // Semi-bold
-                    fontFamily: "Merriweather, serif",
-                    color: "black",
-                  }}
-                >
-                  {transaction.description}
-                </Typography>
-              </CardContent>
-              <IconButton
-                onClick={() => handleDeleteTransaction(transaction._id)}
+              <Card
                 sx={{
-                  color: "#8A2BE2",
-                  "&:hover": { color: "red" },
+                  width: 250,
+                  padding: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  borderRadius: 3,
+                  background:
+                    transaction.category === "Income" ? "#C8E6C9" : "#FFCDD2",
+                  transition: "all 0.3s ease-in-out",
                 }}
               >
-                <Delete />
-              </IconButton>
-            </Card>
-          </motion.div>
-        ))}
-      </Box>
+                <CardContent sx={{ textAlign: "center" }}>
+                  {transaction.category === "Income" ? (
+                    <AttachMoney sx={{ fontSize: 40, color: "#8A2BE2" }} />
+                  ) : (
+                    <MoneyOff sx={{ fontSize: 40, color: "#8A2BE2" }} />
+                  )}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      mt: 1,
+                      fontFamily: "Playfair Display, serif",
+                      color: "black",
+                    }}
+                  >
+                    {transaction.category}
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 600,
+                      fontFamily: "Playfair Display, serif",
+                      color: "black",
+                    }}
+                  >
+                    ₹{transaction.amount}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      fontFamily: "Merriweather, serif",
+                      color: "black",
+                    }}
+                  >
+                    {transaction.description}
+                  </Typography>
+                </CardContent>
+                <IconButton
+                  onClick={() => handleDeleteTransaction(transaction._id)}
+                  sx={{ color: "#8A2BE2", "&:hover": { color: "red" } }}
+                >
+                  <Delete />
+                </IconButton>
+              </Card>
+            </motion.div>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };
