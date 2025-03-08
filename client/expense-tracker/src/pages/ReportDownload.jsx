@@ -51,6 +51,12 @@ const ReportDownload = () => {
         }
       );
 
+      // 🔹 Check if response is empty (No reports found)
+      if (response.data.size === 0) {
+        alert("No reports found for the selected month and year!");
+        return;
+      }
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -60,7 +66,13 @@ const ReportDownload = () => {
       link.remove();
     } catch (error) {
       console.error("Error downloading report:", error);
-      alert("Failed to download the report. Please try again.");
+
+      // 🔹 Handle 404 (No records found)
+      if (error.response && error.response.status === 404) {
+        alert("No reports found for the selected month and year!");
+      } else {
+        alert("Failed to download the report. Please try again.");
+      }
     }
   };
 
