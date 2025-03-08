@@ -27,7 +27,7 @@ const ForgotPassword = () => {
 
    try {
      const response = await axios.post(
-       "http://localhost:4000/api/auth/forgot-password",
+       "https://expense-tracker-demo-sanu.onrender.com/api/auth/forgot-password",
        { email }
      );
 

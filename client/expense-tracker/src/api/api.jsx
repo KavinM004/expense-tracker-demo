@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:4000/api/auth", // ✅ Make sure this matches your backend URL
+  baseURL: "https://expense-tracker-demo-sanu.onrender.com/api/auth", // ✅ Make sure this matches your backend URL
 });
 
 // Add token to requests if user is logged in
