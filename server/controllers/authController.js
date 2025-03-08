@@ -109,7 +109,7 @@ export const requestPasswordReset = async (req, res) => {
     await user.save();
 
     // Send reset link via email
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetLink = `https://expense-tracker-applications.netlify.app/login/reset-password/${resetToken}`;
 
     await transporter.sendMail({
       to: user.email,
