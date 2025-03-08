@@ -43,9 +43,9 @@ const ResetPassword = () => {
     }
 
     try {
-      const response = await axios.put(
+      const response = await axios.post(
         `https://expense-tracker-demo-sanu.onrender.com/api/auth/reset-password/${token}`,
-        { newPassword, confirmPassword }, // Sending both fields for validation
+        { newPassword, confirmPassword },
         { headers: { "Content-Type": "application/json" } }
       );
 
@@ -57,7 +57,6 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
-
 
   return (
     <motion.div

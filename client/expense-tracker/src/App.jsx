@@ -20,7 +20,10 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route
+          path="/login/reset-password/:token"
+          element={<ResetPassword />}
+        />
 
         {/* Protected Routes with Navbar */}
         <Route
