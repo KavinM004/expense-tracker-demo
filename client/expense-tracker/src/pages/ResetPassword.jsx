@@ -15,7 +15,7 @@ import { Lock, CheckCircle } from "@mui/icons-material";
 import { motion } from "framer-motion";
 
 const ResetPassword = () => {
-  const { token } = useParams(); // Get token from URL
+  const { token } = useParams(); //  Get token from URL
   const navigate = useNavigate();
 
   const [newPassword, setNewPassword] = useState("");
