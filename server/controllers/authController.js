@@ -6,6 +6,8 @@ import User from "../models/User.js";
 import dotenv from "dotenv";
 dotenv.config();
 
+const FRONTEND_URL =  "https://expense-tracker-applications.netlify.app";
+
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
@@ -98,18 +100,15 @@ export const requestPasswordReset = async (req, res) => {
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
 
     // Store hashed token and expiration in DB
     user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // Token valid for 1 hour
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour validity
     await user.save();
 
     // Send reset link via email
-    const resetLink = `https://expense-tracker-applications.netlify.app/login/reset-password/${resetToken}`;
+    const resetLink = `${FRONTEND_URL}/login/reset-password/${resetToken}`;
 
     await transporter.sendMail({
       to: user.email,
@@ -121,9 +120,7 @@ export const requestPasswordReset = async (req, res) => {
 
     res.status(200).json({ message: "Password reset email sent." });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error sending email", error: error.message });
+    res.status(500).json({ message: "Error sending email", error: error.message });
   }
 };
 
